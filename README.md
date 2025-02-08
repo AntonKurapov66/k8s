@@ -1,1 +1,1 @@
-# k8s
+# Rep for homeworks course kubernetes
