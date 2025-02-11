@@ -1,42 +1,83 @@
-# Домашнее задание к занятию «Kubernetes. Причины появления. Команда kubectl» - Курапов Антон
+![image](https://github.com/user-attachments/assets/cb8ebe7f-eb63-453d-892e-5a9ab3db6368)# Домашнее задание к занятию «Базовые объекты K8S» - Курапов Антон
 
-## Задание 1. Установка MicroK8S
-* Установить MicroK8S на локальную машину или на удалённую виртуальную машину.
-* Установить dashboard.
-* Сгенерировать сертификат для подключения к внешнему ip-адресу.
-## Задание 2. Установка и настройка локального kubectl
-* Установить на локальную машину kubectl.
-* Настроить локально подключение к кластеру.
-* Подключиться к дашборду с помощью port-forward.
+## Задание 1. Создать Pod с именем hello-world
+* Создать манифест (yaml-конфигурацию) Pod.
+* Использовать image - gcr.io/kubernetes-e2e-test-images/echoserver:2.2.
+* Подключиться локально к Pod с помощью kubectl port-forward и вывести значение (curl или в браузере).
+
+## Задание 2. Создать Service и подключить его к Pod
+* Создать Pod с именем netology-web.
+* Использовать image — gcr.io/kubernetes-e2e-test-images/echoserver:2.2.
+* Создать Service с именем netology-svc и подключить к netology-web.
+* Подключиться локально к Service с помощью kubectl port-forward и вывести значение (curl или в браузере).
 
 ## Решение 1.
 
-Установил microk8s 
+Создал ямлик test-pod1.yaml для пода: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_0.PNG)
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: test-pod
+    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+    ports:
+    - containerPort: 8080
+```
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_0.PNG)
 
-Прокинул порт для дашборда и сгенерировал сертификат, открыл в браузере.
+проверил, что все поднялось:
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_2.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_1.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_3.PNG)
- 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_4.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2.PNG)
+
+прокинул порт под под и проверил его в браузере: 
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2_0.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2_1.PNG)
+
 
 ## Решение 2.
 
-Установил на вторую ВМ kubectl 
+Создал под netology-web: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_5.PNG)
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netology-web
+  labels:
+    app: netology
+spec:
+  containers:
+  - name: netology-web
+    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+```
+ и создал сервис добавив в селекторы под web-netology, тем самым подключив его к сервису
 
-скопировал config с master`а и изменил server в config`е, проверил на второй ВМ ноды в кластере. 
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: netology-svc
+spec:
+  ports:
+    - name: web
+      port: 8080
+  selector:
+    app: netology
+```
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_3.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_6.PNG) 
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_4.PNG)
 
-Так же как и с мастером, пробросил порт для дашборда. 
+так же прокинул порт для сервиса и проверил как через curl так и в браузере: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_7.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_5.PNG)
 
-На вкладке Nodes выден мастер, открывал дашборд через вторую ВМ. 
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_1/jpg/01_8.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_6.PNG)
