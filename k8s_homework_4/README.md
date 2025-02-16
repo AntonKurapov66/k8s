@@ -1,83 +1,133 @@
-# Домашнее задание к занятию «Базовые объекты K8S» - Курапов Антон
+# Домашнее задание к занятию «Сетевое взаимодействие в K8S. Часть 1» - Курапов Антон
 
-## Задание 1. Создать Pod с именем hello-world
-* Создать манифест (yaml-конфигурацию) Pod.
-* Использовать image - gcr.io/kubernetes-e2e-test-images/echoserver:2.2.
-* Подключиться локально к Pod с помощью kubectl port-forward и вывести значение (curl или в браузере).
-
-## Задание 2. Создать Service и подключить его к Pod
-* Создать Pod с именем netology-web.
-* Использовать image — gcr.io/kubernetes-e2e-test-images/echoserver:2.2.
-* Создать Service с именем netology-svc и подключить к netology-web.
-* Подключиться локально к Service с помощью kubectl port-forward и вывести значение (curl или в браузере).
+## Задание 1. Создать Deployment и обеспечить доступ к контейнерам приложения по разным портам из другого Pod внутри кластера
+* Создать Deployment приложения, состоящего из двух контейнеров (nginx и multitool), с количеством реплик 3 шт.
+* Создать Service, который обеспечит доступ внутри кластера до контейнеров приложения из п.1 по порту 9001 — nginx 80, по 9002 — multitool 8080.
+* Создать отдельный Pod с приложением multitool и убедиться с помощью curl, что из пода есть доступ до приложения из п.1 по разным портам в разные контейнеры.
+* Продемонстрировать доступ с помощью curl по доменному имени сервиса.
+* Предоставить манифесты Deployment и Service в решении, а также скриншоты или вывод команды п.4.
+## Задание 2. Создать Service и обеспечить доступ к приложениям снаружи кластера
+* Создать отдельный Service приложения из Задания 1 с возможностью доступа снаружи кластера к nginx, используя тип NodePort.
+* Продемонстрировать доступ с помощью браузера или curl с локального компьютера.
+* Предоставить манифест и Service в решении, а также скриншоты или вывод команды п.2.
 
 ## Решение 1.
 
-Создал ямлик test-pod1.yaml для пода: 
+Создал deployment и сервис: 
 
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: test-pod
-spec:
-  containers:
-  - name: test-pod
-    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
-    ports:
-    - containerPort: 8080
-```
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_0.PNG)
-
-проверил, что все поднялось:
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_1.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2.PNG)
-
-прокинул порт под под и проверил его в браузере: 
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2_0.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_2_1.PNG)
-
-
-## Решение 2.
-
-Создал под netology-web: 
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: netology-web
   labels:
-    app: netology
+    app: dep-multitool
+  name: dep-multitool
+  namespace: default
 spec:
-  containers:
-  - name: netology-web
-    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+  replicas: 3
+  selector:
+    matchLabels:
+      app: multitool
+  template:
+    metadata:
+      labels:
+        app: multitool
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+      - name: multitool
+        image: wbitt/network-multitool:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: HTTP_PORT
+          value: "8080"
 ```
- и создал сервис добавив в селекторы под web-netology, тем самым подключив его к сервису
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: netology-svc
+  name: deployment-svc4
 spec:
-  ports:
-    - name: web
-      port: 8080
   selector:
-    app: netology
+    app: multitool
+  ports:
+  - name: for-nginx
+    port: 9001
+    targetPort: 80
+  - name: for-multitool
+    port: 9002
+    targetPort: 8080
 ```
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_3.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_4.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_1.PNG)
 
-так же прокинул порт для сервиса и проверил как через curl так и в браузере: 
+Создадаим отдельный под для multitool: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_5.PNG)
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: multitool-pod4
+  name: multitool-pod4
+  namespace: default
+spec:
+  containers:
+  - name: multitool
+    image: wbitt/network-multitool
+    ports:
+    - containerPort: 8090
+      name: multitool-port
+``` 
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_2.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_2/jpg/01_6.PNG)
+Теперь изнутрки пода через curl проверим подключение:
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_0.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_1.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_2.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_3.PNG)
+
+Теперь изнутрки пода через curl проверим подключение по доменному имени:
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_4.PNG)
+
+
+## Решение 2.
+
+Создадим сервис svc-multitool-nodeport.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-multitool-nodeport
+spec:
+  selector:
+    app: multitool
+  ports:
+    - name: for-nginx
+      nodePort: 30500
+      targetPort: 80
+      port: 80
+    - name: for-multitool
+      nodePort: 30501
+      targetPort: 8080
+      port: 8080
+  type: NodePort
+```
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_5.PNG)
+
+проверяем доступность в браузере 
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_6.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_7.PNG)
