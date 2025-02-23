@@ -1,30 +1,55 @@
-# Домашнее задание к занятию «Сетевое взаимодействие в K8S. Часть 1» - Курапов Антон
+# Домашнее задание к занятию «Сетевое взаимодействие в K8S. Часть 2» - Курапов Антон
 
-## Задание 1. Создать Deployment и обеспечить доступ к контейнерам приложения по разным портам из другого Pod внутри кластера
-* Создать Deployment приложения, состоящего из двух контейнеров (nginx и multitool), с количеством реплик 3 шт.
-* Создать Service, который обеспечит доступ внутри кластера до контейнеров приложения из п.1 по порту 9001 — nginx 80, по 9002 — multitool 8080.
-* Создать отдельный Pod с приложением multitool и убедиться с помощью curl, что из пода есть доступ до приложения из п.1 по разным портам в разные контейнеры.
-* Продемонстрировать доступ с помощью curl по доменному имени сервиса.
+## Задание 1. Создать Deployment приложений backend и frontend
+* Создать Deployment приложения frontend из образа nginx с количеством реплик 3 шт.
+* Создать Deployment приложения backend из образа multitool.
+* Добавить Service, которые обеспечат доступ к обоим приложениям внутри кластера.
+* Продемонстрировать, что приложения видят друг друга с помощью Service.
 * Предоставить манифесты Deployment и Service в решении, а также скриншоты или вывод команды п.4.
-## Задание 2. Создать Service и обеспечить доступ к приложениям снаружи кластера
-* Создать отдельный Service приложения из Задания 1 с возможностью доступа снаружи кластера к nginx, используя тип NodePort.
+## Задание 2. Создать Ingress и обеспечить доступ к приложениям снаружи кластера
+* Включить Ingress-controller в MicroK8S.
+* Создать Ingress, обеспечивающий доступ снаружи по IP-адресу кластера MicroK8S так, чтобы при запросе только по адресу открывался frontend а при добавлении /api - backend.
 * Продемонстрировать доступ с помощью браузера или curl с локального компьютера.
-* Предоставить манифест и Service в решении, а также скриншоты или вывод команды п.2.
-
+* Предоставить манифесты и скриншоты или вывод команды п.2.
 ## Решение 1.
 
-Создал deployment и сервис: 
+Deployment приложения frontend с образом nginx и 3 шт реплик. front.yaml: 
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: dep-multitool
-  name: dep-multitool
+    app: nginx
+  name: frontend
   namespace: default
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+```
+
+Deployment приложения backend с образом multitool back.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: default
+spec:
+  replicas: 1
   selector:
     matchLabels:
       app: multitool
@@ -34,100 +59,92 @@ spec:
         app: multitool
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
       - name: multitool
         image: wbitt/network-multitool:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         env:
         - name: HTTP_PORT
-          value: "8080"
+          value: "80"
 ```
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_0.PNG)
+
+ Service для доступа к обоим приложениям:
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: deployment-svc4
+  name: frontend-svc
+  namespace: default
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: for-nginx
+    port: 80
+```
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: default
 spec:
   selector:
     app: multitool
   ports:
-  - name: for-nginx
-    port: 9001
-    targetPort: 80
   - name: for-multitool
-    port: 9002
-    targetPort: 8080
+    port: 80
 ```
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_1.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_1.PNG)
+проверяем доступность через сервисы: 
 
-Создадаим отдельный под для multitool: 
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_2.PNG)
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    app: multitool-pod4
-  name: multitool-pod4
-  namespace: default
-spec:
-  containers:
-  - name: multitool
-    image: wbitt/network-multitool
-    ports:
-    - containerPort: 8090
-      name: multitool-port
-``` 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_2.PNG)
-
-Теперь изнутрки пода через curl проверим подключение:
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_0.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_1.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_2.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_3_3.PNG)
-
-Теперь изнутрки пода через curl проверим подключение по доменному имени:
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_4.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_2_1.PNG)
 
 
 ## Решение 2.
 
-Создадим сервис svc-multitool-nodeport.yaml
+На мастере активируем ingress
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_3.PNG)
+
+создаем ingress.yaml : 
 
 ```yaml
-apiVersion: v1
-kind: Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: svc-multitool-nodeport
+  name: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  selector:
-    app: multitool
-  ports:
-    - name: for-nginx
-      nodePort: 30500
-      targetPort: 80
-      port: 80
-    - name: for-multitool
-      nodePort: 30501
-      targetPort: 8080
-      port: 8080
-  type: NodePort
+  rules:
+  - host: test.ru
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-svc
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-svc
+            port:
+              number: 80
 ```
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_5.PNG)
 
-проверяем доступность в браузере 
+проверяем доступность в браузере: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_6.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_5/jpg/01_4.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_4/jpg/01_7.PNG)
+
