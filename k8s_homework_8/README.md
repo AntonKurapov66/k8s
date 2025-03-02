@@ -1,101 +1,217 @@
-# Домашнее задание к занятию «Хранение в K8s. Часть 1» - Курапов Антон
+# Домашнее задание к занятию «Конфигурация приложений» - Курапов Антон
 
-## Задание 1. Создать Deployment приложения, состоящего из двух контейнеров и обменивающихся данными.
+## Задание 1. Создать Deployment приложения и решить возникшую проблему с помощью ConfigMap. Добавить веб-страницу
 
-* Создать Deployment приложения, состоящего из контейнеров busybox и multitool.
-* Сделать так, чтобы busybox писал каждые пять секунд в некий файл в общей директории.
-* Обеспечить возможность чтения файла контейнером multitool.
-* Продемонстрировать, что multitool может читать файл, который периодоически обновляется.
-* Предоставить манифесты Deployment в решении, а также скриншоты или вывод команды из п. 4.
+* Создать Deployment приложения, состоящего из контейнеров nginx и multitool.
+* Решить возникшую проблему с помощью ConfigMap.
+* Продемонстрировать, что pod стартовал и оба конейнера работают.
+* Сделать простую веб-страницу и подключить её к Nginx с помощью ConfigMap. Подключить Service и показать вывод curl или в браузере.
+* Предоставить манифесты, а также скриншоты или вывод необходимых команд.
 
-## Задание 2. Создать DaemonSet приложения, которое может прочитать логи ноды.
+## Задание 2. Создать приложение с вашей веб-страницей, доступной по HTTPS
 
-* Создать DaemonSet приложения, состоящего из multitool.
-* Обеспечить возможность чтения файла /var/log/syslog кластера MicroK8S.
-* Продемонстрировать возможность чтения файла изнутри пода.
-* Предоставить манифесты Deployment, а также скриншоты или вывод команды из п. 2.
+* Создать Deployment приложения, состоящего из Nginx.
+* Создать собственную веб-страницу и подключить её как ConfigMap к приложению.
+* Выпустить самоподписной сертификат SSL. Создать Secret для использования сертификата.
+* Создать Ingress и необходимый Service, подключить к нему SSL в вид. Продемонстировать доступ к приложению по HTTPS.
+* Предоставить манифесты, а также скриншоты или вывод необходимых команд.
+
 
 ## Решение 1.
 
-Создадим новый namespace: 
+Создадим манифесты configmap8.yaml, deployment8.yaml, service8.yaml : 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_0.PNG)
 
-Создаем Deployment: 
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to Nginx!</title>
+    </head>
+    <body>
+        <h1>Homework8</h1>
+        <p>This is a simple Nginx page served from a ConfigMap.</p>
+    </body>
+    </html>
+```
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-multitool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-multitool
+  template:
+    metadata:
+      labels:
+        app: nginx-multitool
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/share/nginx/html
+      - name: multitool
+        image: wbitt/network-multitool
+        args: ["tail", "-f", "/dev/null"]
+      volumes:
+      - name: config-volume
+        configMap:
+          name: nginx-config
+```
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx-multitool
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 80
+  type: NodePort
+```
+
+Если не использовать ConfigMap, то Nginx не найдёт нужные файлы и вернёт ошибку 404. По умолчанию Nginx ищет файлы сайта в /usr/share/nginx/html. Если туда не подложить index.html, он просто покажет страницу ошибки.
+Если не монтировать ConfigMap, то Nginx будет использовать файлы, которые есть внутри контейнера по умолчанию.
+Если изменить содержимое /usr/share/nginx/html, но без ConfigMap, то придётся пересобирать образ Nginx каждый раз при изменении страницы.
+
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/01_0.PNG) 
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/01_1.PNG) 
+
+## Решение 2.
+
+Создаем сертификат и добавляем его в серкреты нашего кластера.
+
+```sh
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=nginx/O=nginx"
+```
+```sh
+kubectl create secret tls nginx-tls --cert=tls.crt --key=tls.key
+```
+Подготавливаем манифесты для разворачивания приложения: 
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-https-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to Secure Nginx!</title>
+    </head>
+    <body>
+        <h1>HTTPS Works!</h1>
+        <p>This page is served securely with SSL.</p>
+    </body>
+    </html>
+```
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: homework-multitool-busybox
-  namespace: homework6
+  name: nginx-https
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: main
+      app: nginx-https
   template:
     metadata:
       labels:
-        app: main
+        app: nginx-https
     spec:
       containers:
-      - name: busybox
-        image: busybox
-        command: ['/bin/sh', '-c', 'while true; do echo "Container up $(uptime)" >> /busybox_dir/uptime.log; sleep 10; done']
+      - name: nginx
+        image: nginx:latest
         volumeMounts:
-          - mountPath: "/busybox_dir"
-            name: deployment-volume
-      - name: multitool
-        image: wbitt/network-multitool
-        volumeMounts:
-          - name: deployment-volume
-            mountPath: "/multitool_dir"
+        - name: config-volume
+          mountPath: /usr/share/nginx/html
+        - name: tls-volume
+          mountPath: /etc/nginx/ssl
+          readOnly: true
       volumes:
-        - name: deployment-volume
-          emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: nginx-https-config
+      - name: tls-volume
+        secret:
+          secretName: nginx-tls
 ```
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_1.PNG) 
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_2.PNG)
-
-## Решение 2.
-
-Создадим DaemonSet:
 
 ```yaml
-apiVersion: apps/v1
-kind: DaemonSet
+apiVersion: v1
+kind: Service
 metadata:
-  name: multitool-logs
-  namespace: homework6
+  name: nginx-https-service
 spec:
   selector:
-    matchLabels:
-      app: mt-logs
-  template:
-    metadata:
-      labels:
-        app: mt-logs
-    spec:
-      containers:
-      - name: multitool
-        image: wbitt/network-multitool
-        volumeMounts:
-          - name: log-volume
-            mountPath: "/log_data"
-      volumes:
-        - name: log-volume
-          hostPath:
-            path: /var/log
+    app: nginx-https
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 80
+ # type: ClusterIP
 ```
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_3.PNG)
 
-проверяем : 
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-https-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - homework8.com
+    secretName: nginx-tls
+  rules:
+  - host: homework8.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-https-service
+            port:
+              number: 443
+```
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_4.PNG)
+Разворачиваем все манифесты и на локальной машине прописываем в /etc/hosts следующую строчку: 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_6/jpg/01_5.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/02_0.PNG) 
 
+```txt
+192.168.56.104 homework8.com
+```
+где 192.168.56.104 - это IP ноды 
 
+проверяем доступность с помощью curl 
+
+```sh 
+curl -k https://homework8.com
+```
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/02_1.PNG) 
