@@ -105,6 +105,8 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt
 ```sh
 kubectl create secret tls nginx-tls --cert=tls.crt --key=tls.key
 ```
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/02_0.PNG)
+
 Подготавливаем манифесты для разворачивания приложения: 
 
 ```yaml
@@ -200,8 +202,7 @@ spec:
 ```
 
 Разворачиваем все манифесты и на локальной машине прописываем в /etc/hosts следующую строчку: 
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_8/jpg/02_0.PNG) 
+ 
 
 ```txt
 192.168.56.104 homework8.com
