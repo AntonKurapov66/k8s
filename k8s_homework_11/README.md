@@ -15,27 +15,27 @@
 
 ### Расчет ресурсов по компонентам
 * База данных (PostgreSQL, StatefulSet)
-*  Отказоустойчивость: 3 копии (Primary-Replica).
-*  Запросы: 4 ГБ RAM / 1 CPU на под.
-*  Лимиты: 6 ГБ RAM / 2 CPU.
-*  Storage: PersistentVolume (SSD, 100-500 ГБ).
-*  Итого: 12 ГБ RAM, 3 CPU (3 пода).
+ *  Отказоустойчивость: 3 копии (Primary-Replica).
+ *  Запросы: 4 ГБ RAM / 1 CPU на под.
+ *  Лимиты: 6 ГБ RAM / 2 CPU.
+ *  Storage: PersistentVolume (SSD, 100-500 ГБ).
+ *  Итого: 12 ГБ RAM, 3 CPU (3 пода).
 
 * Кеш (Redis Cluster, StatefulSet)
-*  Отказоустойчивость: 3 копии (Sentinel для failover).
-*  Запросы: 4 ГБ RAM / 1 CPU на под.
-*  Лимиты: 5 ГБ RAM / 1.5 CPU.
-*  Storage: PersistentVolume (если нужен AOF, 10-50 ГБ).
-*  Итого: 12 ГБ RAM, 3 CPU (3 пода).
+ *  Отказоустойчивость: 3 копии (Sentinel для failover).
+ *  Запросы: 4 ГБ RAM / 1 CPU на под.
+ *  Лимиты: 5 ГБ RAM / 1.5 CPU.
+ *  Storage: PersistentVolume (если нужен AOF, 10-50 ГБ).
+ *  Итого: 12 ГБ RAM, 3 CPU (3 пода).
 
 * Фронтенд (Nginx, Deployment)
-*  Запросы: 50 МБ RAM / 0.2 CPU на под.
-*  Лимиты: 100 МБ RAM / 0.5 CPU.
-*  Ingress: балансировка через Ingress-контроллер.
-*  Итого: 250 МБ RAM, 1 CPU (5 подов).
+ *  Запросы: 50 МБ RAM / 0.2 CPU на под.
+ *  Лимиты: 100 МБ RAM / 0.5 CPU.
+ *  Ingress: балансировка через Ingress-контроллер.
+ *  Итого: 250 МБ RAM, 1 CPU (5 подов).
 
 * Бекенд (FastAPI, Node.js, Go, Deployment)
-*  Запросы: 600 МБ RAM / 1 CPU на под.
-*  Лимиты: 1 ГБ RAM / 1.5 CPU.
-*  HPA: масштабирование по CPU & RAM.
-*  Итого: 6 ГБ RAM, 10 CPU (10 подов).
+ *  Запросы: 600 МБ RAM / 1 CPU на под.
+ *  Лимиты: 1 ГБ RAM / 1.5 CPU.
+ *  HPA: масштабирование по CPU & RAM.
+ *  Итого: 6 ГБ RAM, 10 CPU (10 подов).
