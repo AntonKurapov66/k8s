@@ -15,12 +15,12 @@
 
 в inventary.ini ошибся и указал два раза одну ноду поэтому в кластере вместо 5 нод , получилось 4 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_0_1.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_12/jpg/01_0_1.PNG)
 
 установка прошла успешно : 
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_1.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_12/jpg/01_1.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_2.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_12/jpg/01_2.PNG)
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_3.PNG)
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_12/jpg/01_3.PNG)
