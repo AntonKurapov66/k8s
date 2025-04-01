@@ -1,31 +1,26 @@
-# Домашнее задание к занятию «Troubleshooting» - Курапов Антон
+# Домашнее задание к занятию «Установка Kubernetes» - Курапов Антон
 
-## Задание. При деплое приложение web-consumer не может подключиться к auth-db. Необходимо это исправить
-
-* Установить приложение по команде:
-```shell
-kubectl apply -f https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml
-```
-* Выявить проблему и описать.
-* Исправить проблему, описать, что сделано.
-* Продемонстрировать, что проблема решена.
-
+## Задание 1. Установить кластер k8s с 1 master node
+* Подготовка работы кластера из 5 нод: 1 мастер и 4 рабочие ноды.
+* В качестве CRI — containerd.
+* Запуск etcd производить на мастере.
+* Способ установки выбрать самостоятельно.
 ## Решение.
+Выбрал способ установки через kubespray
 
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_0.PNG)
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_12/jpg/01_0.PNG)
+
+Выполнял по скриптам из презентации и демонстрации лектора. 
+
+в inventary.ini ошибся и указал два раза одну ноду поэтому в кластере вместо 5 нод , получилось 4 
+
+![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_0_1.PNG)
+
+установка прошла успешно : 
 
 ![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_1.PNG)
 
-* web-consumer ищет auth-db по имени auth-db, но auth-db находится в namespace: data, а не web. Внутри Kubernetes сервисы разных неймспейсов нельзя найти просто по имени, нужен полный DNS-адрес.
-
-* исправляем внутри деплоймента строку: 
-
 ![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_2.PNG)
 
-* проверяем логи и доступность nginx в браузере 
-
 ![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_3.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_4.PNG)
-
-![alt text](https://github.com/AntonKurapov66/k8s/blob/main/k8s_homework_15/jpg/01_5.PNG)
