@@ -1,0 +1,228 @@
+yandex_iam_service_account.sa: Refreshing state... [id=aje3qurd4ls5o2cugkha]
+yandex_vpc_network.network: Refreshing state... [id=enpp7k7lescfvbdsrep5]
+yandex_kms_symmetric_key.key-a: Refreshing state... [id=abj2deeike4kbdgo6qqg]
+yandex_resourcemanager_folder_iam_member.compute_admin: Refreshing state... [id=b1giaqsjeldr7t9a91bv/compute.admin/serviceAccount:aje3qurd4ls5o2cugkha]
+yandex_resourcemanager_folder_iam_member.loadbalancer_admin: Refreshing state... [id=b1giaqsjeldr7t9a91bv/load-balancer.admin/serviceAccount:aje3qurd4ls5o2cugkha]
+yandex_resourcemanager_folder_iam_member.storage_admin: Refreshing state... [id=b1giaqsjeldr7t9a91bv/storage.admin/serviceAccount:aje3qurd4ls5o2cugkha]
+yandex_iam_service_account_static_access_key.sa_key: Refreshing state... [id=aje001po19f8ljgt6m5o]
+yandex_resourcemanager_folder_iam_member.editor: Refreshing state... [id=b1giaqsjeldr7t9a91bv/editor/serviceAccount:aje3qurd4ls5o2cugkha]
+yandex_vpc_subnet.subnet: Refreshing state... [id=e9b9q7lvbjo2vn8iup72]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # yandex_compute_instance_group.lamp_group will be created
+  + resource "yandex_compute_instance_group" "lamp_group" {
+      + created_at          = (known after apply)
+      + deletion_protection = false
+      + folder_id           = "b1giaqsjeldr7t9a91bv"
+      + id                  = (known after apply)
+      + instances           = (known after apply)
+      + name                = "lamp-group"
+      + service_account_id  = "ajeg0gva2hkqevrdotfm"
+      + status              = (known after apply)
+
+      + allocation_policy {
+          + zones = [
+              + "ru-central1-a",
+            ]
+        }
+
+      + deploy_policy {
+          + max_creating     = 0
+          + max_deleting     = 0
+          + max_expansion    = 1
+          + max_unavailable  = 1
+          + startup_duration = 0
+          + strategy         = (known after apply)
+        }
+
+      + health_check {
+          + healthy_threshold   = 2
+          + unhealthy_threshold = 2
+
+          + http_options {
+              + path = "/"
+              + port = 80
+            }
+        }
+
+      + instance_template {
+          + labels      = (known after apply)
+          + metadata    = (known after apply)
+          + platform_id = "standard-v1"
+
+          + boot_disk {
+              + device_name = (known after apply)
+              + mode        = "READ_WRITE"
+
+              + initialize_params {
+                  + image_id    = "fd827b91d99psvq5fjit"
+                  + size        = (known after apply)
+                  + snapshot_id = (known after apply)
+                  + type        = "network-hdd"
+                }
+            }
+
+          + metadata_options (known after apply)
+
+          + network_interface {
+              + ip_address   = (known after apply)
+              + ipv4         = true
+              + ipv6         = (known after apply)
+              + ipv6_address = (known after apply)
+              + nat          = true
+              + subnet_ids   = [
+                  + "e9b9q7lvbjo2vn8iup72",
+                ]
+            }
+
+          + resources {
+              + core_fraction = 100
+              + cores         = 2
+              + memory        = 2
+            }
+
+          + scheduling_policy (known after apply)
+        }
+
+      + scale_policy {
+          + fixed_scale {
+              + size = 3
+            }
+        }
+    }
+
+  # yandex_lb_network_load_balancer.nlb will be created
+  + resource "yandex_lb_network_load_balancer" "nlb" {
+      + allow_zonal_shift   = (known after apply)
+      + created_at          = (known after apply)
+      + deletion_protection = (known after apply)
+      + folder_id           = (known after apply)
+      + id                  = (known after apply)
+      + name                = "lamp-nlb"
+      + region_id           = (known after apply)
+      + type                = "external"
+
+      + attached_target_group {
+          + target_group_id = (known after apply)
+
+          + healthcheck {
+              + healthy_threshold   = 2
+              + interval            = 2
+              + name                = "http"
+              + timeout             = 1
+              + unhealthy_threshold = 2
+
+              + http_options {
+                  + path = "/"
+                  + port = 80
+                }
+            }
+        }
+
+      + listener {
+          + name        = "http"
+          + port        = 80
+          + protocol    = "tcp"
+          + target_port = 80
+        }
+    }
+
+  # yandex_lb_target_group.target_group will be created
+  + resource "yandex_lb_target_group" "target_group" {
+      + created_at = (known after apply)
+      + folder_id  = (known after apply)
+      + id         = (known after apply)
+      + name       = "lamp-target-group"
+      + region_id  = (known after apply)
+
+      + target {
+          + address   = (known after apply)
+          + subnet_id = "e9b9q7lvbjo2vn8iup72"
+        }
+      + target {
+          + address   = (known after apply)
+          + subnet_id = "e9b9q7lvbjo2vn8iup72"
+        }
+      + target {
+          + address   = (known after apply)
+          + subnet_id = "e9b9q7lvbjo2vn8iup72"
+        }
+    }
+
+  # yandex_storage_bucket.bucket will be created
+  + resource "yandex_storage_bucket" "bucket" {
+      + access_key            = "YCAJEfA-dIp4k8QVynVa4IcA6"
+      + acl                   = "public-read"
+      + bucket                = (known after apply)
+      + bucket_domain_name    = (known after apply)
+      + default_storage_class = (known after apply)
+      + folder_id             = (known after apply)
+      + force_destroy         = false
+      + id                    = (known after apply)
+      + secret_key            = (sensitive value)
+      + website_domain        = (known after apply)
+      + website_endpoint      = (known after apply)
+
+      + anonymous_access_flags (known after apply)
+
+      + server_side_encryption_configuration {
+          + rule {
+              + apply_server_side_encryption_by_default {
+                  + kms_master_key_id = "abj2deeike4kbdgo6qqg"
+                  + sse_algorithm     = "aws:kms"
+                }
+            }
+        }
+
+      + versioning (known after apply)
+    }
+
+  # yandex_storage_object.image will be created
+  + resource "yandex_storage_object" "image" {
+      + access_key   = "YCAJEfA-dIp4k8QVynVa4IcA6"
+      + acl          = "public-read"
+      + bucket       = (known after apply)
+      + content_type = "image/jpeg"
+      + id           = (known after apply)
+      + key          = "test.jpg"
+      + secret_key   = (sensitive value)
+      + source       = "/home/cloudoperator/cloudhomework/test.jpg"
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + bucket_name = (known after apply)
+  + image_url   = (known after apply)
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+yandex_storage_bucket.bucket: Creating...
+yandex_storage_bucket.bucket: Creation complete after 2s [id=lamp-bucket-20250413]
+yandex_storage_object.image: Creating...
+yandex_storage_object.image: Creation complete after 0s [id=test.jpg]
+yandex_compute_instance_group.lamp_group: Creating...
+yandex_compute_instance_group.lamp_group: Still creating... [10s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [20s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [30s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [40s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [50s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m0s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m10s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m20s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m30s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m40s elapsed]
+yandex_compute_instance_group.lamp_group: Still creating... [1m50s elapsed]
+yandex_compute_instance_group.lamp_group: Creation complete after 1m58s [id=cl1r41sstl0nrqnfgqph]
+yandex_lb_target_group.target_group: Creating...
+yandex_lb_target_group.target_group: Creation complete after 1s [id=enp50rhrl7ot6b797iah]
+yandex_lb_network_load_balancer.nlb: Creating...
+yandex_lb_network_load_balancer.nlb: Creation complete after 3s [id=enp9963pvjuavqe51fgp]
